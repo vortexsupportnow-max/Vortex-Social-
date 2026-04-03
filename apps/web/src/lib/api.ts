@@ -1,4 +1,7 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
+// All API requests are routed through the Next.js rewrite proxy (/api-proxy)
+// to avoid CORS issues and to support Docker container-to-container networking.
+// The proxy destination is configured in next.config.js via INTERNAL_API_URL or NEXT_PUBLIC_API_URL.
+const API_BASE = '/api-proxy';
 
 function getToken(): string | null {
   if (typeof window === 'undefined') return null;
