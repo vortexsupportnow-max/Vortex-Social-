@@ -1,0 +1,18 @@
+FROM node:20-alpine AS base
+WORKDIR /app
+
+COPY package.json turbo.json tsconfig.base.json ./
+COPY apps/web/package.json ./apps/web/
+COPY packages/types/package.json ./packages/types/
+COPY packages/ui/package.json ./packages/ui/
+
+RUN npm install
+
+COPY apps/web ./apps/web
+COPY packages/types ./packages/types
+COPY packages/ui ./packages/ui
+
+WORKDIR /app/apps/web
+RUN npm run build
+
+CMD ["npm", "start"]
