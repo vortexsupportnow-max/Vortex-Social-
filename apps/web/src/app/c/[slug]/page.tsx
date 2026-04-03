@@ -1,11 +1,12 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { Community, Post } from '@vortex/types';
 
-interface Params { params: { slug: string } }
+interface Params { params: Promise<{ slug: string }> }
 
 export default function CommunityPage({ params }: Params) {
+  const { slug } = use(params);
   const [community, setCommunity] = useState<Community | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -14,7 +15,7 @@ export default function CommunityPage({ params }: Params) {
 
   useEffect(() => {
     const base = process.env.NEXT_PUBLIC_API_URL;
-    fetch(`${base}/communities/${params.slug}`)
+    fetch(`${base}/communities/${slug}`)
       .then(r => r.json())
       .then(async (c: Community) => {
         setCommunity(c);
@@ -24,7 +25,7 @@ export default function CommunityPage({ params }: Params) {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [params.slug]);
+  }, [slug]);
 
   const handlePost = async (e: React.FormEvent) => {
     e.preventDefault();

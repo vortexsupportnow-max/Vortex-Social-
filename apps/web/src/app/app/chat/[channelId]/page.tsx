@@ -1,12 +1,13 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { use, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { io, Socket } from 'socket.io-client';
 import type { Message } from '@vortex/types';
 
-interface Params { params: { channelId: string } }
+interface Params { params: Promise<{ channelId: string }> }
 
 export default function ChatPage({ params }: Params) {
+  const { channelId } = use(params);
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -25,7 +26,7 @@ export default function ChatPage({ params }: Params) {
     } catch { /* ignore */ }
 
     // Load history
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/messages/channel/${params.channelId}`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/messages/channel/${channelId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(r => r.json())
@@ -34,13 +35,13 @@ export default function ChatPage({ params }: Params) {
     // Connect socket
     const socket = io(process.env.NEXT_PUBLIC_WS_URL ?? 'http://localhost:4000');
     socketRef.current = socket;
-    socket.emit('joinChannel', params.channelId);
+    socket.emit('joinChannel', channelId);
     socket.on('newMessage', (msg: Message) => {
       setMessages(prev => [...prev, msg]);
     });
 
     return () => { socket.disconnect(); };
-  }, [params.channelId, router]);
+  }, [channelId, router]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -49,7 +50,7 @@ export default function ChatPage({ params }: Params) {
   const sendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || !socketRef.current || !userId) return;
-    socketRef.current.emit('sendMessage', { content: input.trim(), channelId: params.channelId, authorId: userId });
+    socketRef.current.emit('sendMessage', { content: input.trim(), channelId, authorId: userId });
     setInput('');
   };
 
